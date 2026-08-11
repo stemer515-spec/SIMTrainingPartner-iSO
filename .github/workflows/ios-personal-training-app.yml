@@ -379,6 +379,15 @@ jobs:
             fi
           done < <(find "$HOME/.pub-cache" "$PWD/.symlinks" -type f -name 'FPPDeviceInfoPlusPlugin.m' -print0 2>/dev/null)
 
+          # Make health plugin Swift header import robust across modular/non-modular pod builds.
+          while IFS= read -r -d '' f; do
+            if ! grep -q '__has_include(<health/health-Swift.h>)' "$f"; then
+              perl -0pi -e 's/#import <health\/health-Swift\.h>/#if __has_include(<health\/health-Swift.h>)\n#import <health\/health-Swift.h>\n#else\n#import "health-Swift.h"\n#endif/g' "$f"
+            fi
+            echo "---- health plugin import snippet ----"
+            grep -nE "health-Swift\.h|__has_include" "$f" || true
+          done < <(find "$HOME/.pub-cache" "$PWD/.symlinks" -type f -name 'HealthPlugin.m' -print0 2>/dev/null)
+
           # Ensure stale automatic signing flags do not block manual profile mapping.
           sed -i '' -E 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' Runner.xcodeproj/project.pbxproj
           /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" "$HOME/export_options.plist" 2>/dev/null || true
