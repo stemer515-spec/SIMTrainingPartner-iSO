@@ -55,15 +55,25 @@ jobs:
 
       - name: Flutter pub get
         run: |
+          if grep -q '^dependency_overrides:' pubspec.yaml; then
+            if grep -q '^  device_info_plus:' pubspec.yaml; then
+              sed -i '' -E "s/^  device_info_plus: .*/  device_info_plus: 11.2.0/" pubspec.yaml
+            else
+              printf '\n  device_info_plus: 11.2.0\n' >> pubspec.yaml
+            fi
+          else
+            printf '\ndependency_overrides:\n  device_info_plus: 11.2.0\n' >> pubspec.yaml
+          fi
+
           # Pin FlutterFire to a known-good patch set in CI.
           flutter pub add \
             firebase_core:4.11.0 \
             firebase_auth:6.5.4 \
             firebase_database:12.4.4 \
             firebase_messaging:16.4.1 \
-            firebase_app_check:0.4.5 \
-            device_info_plus:11.2.0 || true
+            firebase_app_check:0.4.5 || true
           flutter pub get
+          flutter pub deps | grep -E "device_info_plus( |$)" || true
         working-directory: ${{ env.APP_DIR }}
 
       - name: Hotfix device_info_plus for Xcode 15.4
