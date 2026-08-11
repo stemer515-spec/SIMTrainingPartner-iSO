@@ -209,6 +209,14 @@ jobs:
             exit 1
           fi
 
+          # Apply selected profile mapping to Runner target build settings.
+          xcode-project use-profiles \
+            --project "ios/Runner.xcodeproj" \
+            --archive-method app-store \
+            --export-options-plist "$HOME/export_options.plist" \
+            --custom-export-options '{"provisioningProfiles":{"'"$IOS_BUNDLE_ID"'":"'"$CI_PROFILE_NAME"'"}}' \
+            --code-signing-setup-verbose-logging
+
           echo "==== Code signing identities ===="
           security find-identity -v -p codesigning || true
           echo "==== Provisioning profiles ===="
