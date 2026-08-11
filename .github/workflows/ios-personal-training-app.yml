@@ -96,6 +96,31 @@ jobs:
 
       - name: Install CocoaPods dependencies
         run: |
+          mkdir -p ios/Flutter
+          if [ -f ios/Flutter/Release.xcconfig ] && ! grep -q 'Pods-Runner.release.xcconfig' ios/Flutter/Release.xcconfig; then
+            cp ios/Flutter/Release.xcconfig ios/Flutter/Release.xcconfig.bak
+            {
+              echo '#include? "../Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"'
+              cat ios/Flutter/Release.xcconfig.bak
+            } > ios/Flutter/Release.xcconfig
+          fi
+          if [ -f ios/Flutter/Debug.xcconfig ] && ! grep -q 'Pods-Runner.debug.xcconfig' ios/Flutter/Debug.xcconfig; then
+            cp ios/Flutter/Debug.xcconfig ios/Flutter/Debug.xcconfig.bak
+            {
+              echo '#include? "../Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"'
+              cat ios/Flutter/Debug.xcconfig.bak
+            } > ios/Flutter/Debug.xcconfig
+          fi
+          if [ ! -f ios/Flutter/Profile.xcconfig ]; then
+            printf '#include? "../Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"\n#include "Generated.xcconfig"\n' > ios/Flutter/Profile.xcconfig
+          elif ! grep -q 'Pods-Runner.profile.xcconfig' ios/Flutter/Profile.xcconfig; then
+            cp ios/Flutter/Profile.xcconfig ios/Flutter/Profile.xcconfig.bak
+            {
+              echo '#include? "../Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"'
+              cat ios/Flutter/Profile.xcconfig.bak
+            } > ios/Flutter/Profile.xcconfig
+          fi
+
           if grep -qE "^platform :ios" ios/Podfile; then
             sed -i '' -E "s/^platform :ios, .*/platform :ios, '15.0'/" ios/Podfile
           else
@@ -282,6 +307,23 @@ jobs:
             --config-only \
             --no-codesign \
             --dart-define=APP_ENV=${{ inputs.app_env }}
+
+          if [ -f ios/Flutter/Release.xcconfig ] && ! grep -q 'Pods-Runner.release.xcconfig' ios/Flutter/Release.xcconfig; then
+            cp ios/Flutter/Release.xcconfig ios/Flutter/Release.xcconfig.bak
+            {
+              echo '#include? "../Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"'
+              cat ios/Flutter/Release.xcconfig.bak
+            } > ios/Flutter/Release.xcconfig
+          fi
+          if [ ! -f ios/Flutter/Profile.xcconfig ]; then
+            printf '#include? "../Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"\n#include "Generated.xcconfig"\n' > ios/Flutter/Profile.xcconfig
+          elif ! grep -q 'Pods-Runner.profile.xcconfig' ios/Flutter/Profile.xcconfig; then
+            cp ios/Flutter/Profile.xcconfig ios/Flutter/Profile.xcconfig.bak
+            {
+              echo '#include? "../Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"'
+              cat ios/Flutter/Profile.xcconfig.bak
+            } > ios/Flutter/Profile.xcconfig
+          fi
 
           if grep -qE "^platform :ios" ios/Podfile; then
             sed -i '' -E "s/^platform :ios, .*/platform :ios, '15.0'/" ios/Podfile
