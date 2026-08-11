@@ -149,7 +149,8 @@ jobs:
 
           head -n 20 ios/Podfile
           cd ios
-          git config --global http.sslBackend SecureTransport || true
+          git config --global --unset-all http.sslBackend || true
+          git config --global http.sslBackend secure-transport || true
           git config --global http.sslCAInfo /private/etc/ssl/cert.pem || true
           if ! pod install --repo-update; then
             echo "pod install failed with strict SSL; retrying once with GitHub SSL verify disabled"
@@ -353,7 +354,8 @@ jobs:
           fi
 
           cd ios
-          git config --global http.sslBackend SecureTransport || true
+          git config --global --unset-all http.sslBackend || true
+          git config --global http.sslBackend secure-transport || true
           git config --global http.sslCAInfo /private/etc/ssl/cert.pem || true
           if ! pod install --repo-update; then
             echo "pod install failed with strict SSL; retrying once with GitHub SSL verify disabled"
