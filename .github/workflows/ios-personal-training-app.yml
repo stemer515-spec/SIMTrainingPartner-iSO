@@ -72,7 +72,11 @@ jobs:
           # available in the Xcode 15.4 iOS SDK used by this workflow.
           while IFS= read -r -d '' f; do
             perl -0pi -e "s/isiOSAppOnVision\s*=\s*\[NSNumber numberWithBool:\[info isiOSAppOnVision\]\];/isiOSAppOnVision = @NO;/g" "$f"
+            perl -0pi -e "s/\[info\s+isiOSAppOnVision\]/NO/g" "$f"
+            perl -0pi -e "s/info\.isiOSAppOnVision/NO/g" "$f"
             perl -0pi -e "s/natural_t\s+mem_free\s*=\s*vm_stat\.free_count\s*\*\s*page_size;/uint64_t mem_free = (uint64_t)vm_stat.free_count * (uint64_t)page_size;/g" "$f"
+            echo "---- device_info_plus patched snippet ----"
+            grep -nE "isiOSAppOnVision|mem_free|vm_stat\.free_count" "$f" || true
             echo "Patched: $f"
           done < <(find "$HOME/.pub-cache" "$PWD/ios/.symlinks" -type f -name 'FPPDeviceInfoPlusPlugin.m' -print0 2>/dev/null)
         working-directory: ${{ env.APP_DIR }}
