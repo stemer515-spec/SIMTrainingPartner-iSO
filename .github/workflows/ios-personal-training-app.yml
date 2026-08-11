@@ -138,14 +138,13 @@ jobs:
             mv ios/Podfile.tmp ios/Podfile
           fi
 
-          # Avoid global modular headers because it can break gRPC-C++ builds;
-          # instead enable module maps only for Firebase Swift pod dependencies.
+          # Build Firebase pods as frameworks to avoid static Swift module-map
+          # integration failures across FirebaseSharedSwift/Auth/Firestore/AppCheck.
           sed -i '' -E '/^use_modular_headers!$/d' ios/Podfile
-          for dep in GoogleUtilities RecaptchaInterop GTMSessionFetcher FirebaseAuthInterop FirebaseAppCheckInterop FirebaseCore FirebaseCoreExtension leveldb-library FirebaseFirestoreInternal FirebaseAppCheck; do
-            if ! grep -q "pod '$dep', :modular_headers => true" ios/Podfile; then
-              perl -0pi -e "s/(target 'Runner' do\n)/\1  pod '$dep', :modular_headers => true\n/" ios/Podfile
-            fi
-          done
+          sed -i '' -E '/^\s*pod\s+'\''(GoogleUtilities|RecaptchaInterop|GTMSessionFetcher|FirebaseAuthInterop|FirebaseAppCheckInterop|FirebaseCore|FirebaseCoreExtension|leveldb-library|FirebaseFirestoreInternal|FirebaseAppCheck)'\'',\s*:modular_headers\s*=>\s*true\s*$/d' ios/Podfile
+          if ! grep -q '^use_frameworks! :linkage => static$' ios/Podfile; then
+            perl -0pi -e "s/(platform :ios, '15.0'\n)/\1use_frameworks! :linkage => static\n/" ios/Podfile
+          fi
 
           if ! grep -q "flutter_additional_ios_build_settings(target)" ios/Podfile; then
             perl -0pi -e "s/installer\.pods_project\.targets\.each do \|target\|/installer.pods_project.targets.each do |target|\n    flutter_additional_ios_build_settings(target)/" ios/Podfile
@@ -348,14 +347,13 @@ jobs:
             mv ios/Podfile.tmp ios/Podfile
           fi
 
-          # Avoid global modular headers because it can break gRPC-C++ builds;
-          # instead enable module maps only for Firebase Swift pod dependencies.
+          # Build Firebase pods as frameworks to avoid static Swift module-map
+          # integration failures across FirebaseSharedSwift/Auth/Firestore/AppCheck.
           sed -i '' -E '/^use_modular_headers!$/d' ios/Podfile
-          for dep in GoogleUtilities RecaptchaInterop GTMSessionFetcher FirebaseAuthInterop FirebaseAppCheckInterop FirebaseCore FirebaseCoreExtension leveldb-library FirebaseFirestoreInternal FirebaseAppCheck; do
-            if ! grep -q "pod '$dep', :modular_headers => true" ios/Podfile; then
-              perl -0pi -e "s/(target 'Runner' do\n)/\1  pod '$dep', :modular_headers => true\n/" ios/Podfile
-            fi
-          done
+          sed -i '' -E '/^\s*pod\s+'\''(GoogleUtilities|RecaptchaInterop|GTMSessionFetcher|FirebaseAuthInterop|FirebaseAppCheckInterop|FirebaseCore|FirebaseCoreExtension|leveldb-library|FirebaseFirestoreInternal|FirebaseAppCheck)'\'',\s*:modular_headers\s*=>\s*true\s*$/d' ios/Podfile
+          if ! grep -q '^use_frameworks! :linkage => static$' ios/Podfile; then
+            perl -0pi -e "s/(platform :ios, '15.0'\n)/\1use_frameworks! :linkage => static\n/" ios/Podfile
+          fi
 
           if ! grep -q "flutter_additional_ios_build_settings(target)" ios/Podfile; then
             perl -0pi -e "s/installer\.pods_project\.targets\.each do \|target\|/installer.pods_project.targets.each do |target|\n    flutter_additional_ios_build_settings(target)/" ios/Podfile
@@ -416,6 +414,8 @@ jobs:
             archive 2>&1 | tee "$RUNNER_TEMP/xcodebuild-archive.log"; then
             echo "==== xcodebuild archive error lines ===="
             grep -niE "(^|[^A-Za-z])(fatal error:|error:|\*\* ARCHIVE FAILED \*\*|Command PhaseScriptExecution failed|Swift Compiler Error)" "$RUNNER_TEMP/xcodebuild-archive.log" || true
+            echo "==== FirebaseSharedSwift focused errors ===="
+            grep -niE "FirebaseSharedSwift|SwiftCompile|CompileSwift|error:" "$RUNNER_TEMP/xcodebuild-archive.log" | tail -n 200 || true
             echo "==== xcodebuild archive tail ===="
             tail -n 500 "$RUNNER_TEMP/xcodebuild-archive.log" || true
             exit 1
