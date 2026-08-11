@@ -149,7 +149,12 @@ jobs:
 
           head -n 20 ios/Podfile
           cd ios
-          pod install --repo-update
+          git config --global http.sslBackend SecureTransport || true
+          git config --global http.sslCAInfo /private/etc/ssl/cert.pem || true
+          if ! pod install --repo-update; then
+            echo "pod install failed with strict SSL; retrying once with GitHub SSL verify disabled"
+            GIT_SSL_NO_VERIFY=1 pod install --repo-update
+          fi
         working-directory: ${{ env.APP_DIR }}
 
       - name: Prepare export options
@@ -348,7 +353,12 @@ jobs:
           fi
 
           cd ios
-          pod install --repo-update
+          git config --global http.sslBackend SecureTransport || true
+          git config --global http.sslCAInfo /private/etc/ssl/cert.pem || true
+          if ! pod install --repo-update; then
+            echo "pod install failed with strict SSL; retrying once with GitHub SSL verify disabled"
+            GIT_SSL_NO_VERIFY=1 pod install --repo-update
+          fi
           sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]\+;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g" Pods/Pods.xcodeproj/project.pbxproj
 
           # Re-apply device_info_plus hotfix after all regeneration/install steps.
