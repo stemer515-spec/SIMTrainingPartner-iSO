@@ -165,11 +165,6 @@ jobs:
               --private-key "@file:$asc_key_path" \
               --certificate-key "@file:$cert_key_path"
             keychain add-certificates -A
-            xcode-project use-profiles \
-              --project "ios/Runner.xcodeproj" \
-              --archive-method app-store \
-              --export-options-plist "$HOME/export_options.plist" \
-              --code-signing-setup-verbose-logging
           fi
 
           echo "==== Code signing identities ===="
@@ -208,6 +203,11 @@ jobs:
           cd ios
           pod install --repo-update
           sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]\+;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g" Pods/Pods.xcodeproj/project.pbxproj
+
+          # Ensure automatic signing is not blocked by stale manual profile fields.
+          sed -i '' -E '/PROVISIONING_PROFILE_SPECIFIER = /d;/PROVISIONING_PROFILE = /d' Runner.xcodeproj/project.pbxproj
+          sed -i '' -E 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' Runner.xcodeproj/project.pbxproj
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -showBuildSettings | grep -E "CODE_SIGN_STYLE|PROVISIONING_PROFILE|PROVISIONING_PROFILE_SPECIFIER|DEVELOPMENT_TEAM|PRODUCT_BUNDLE_IDENTIFIER" || true
 
           xcodebuild -workspace Runner.xcworkspace \
             -scheme Runner \
