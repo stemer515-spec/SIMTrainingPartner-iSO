@@ -141,7 +141,7 @@ jobs:
           # Avoid global modular headers because it can break gRPC-C++ builds;
           # instead enable module maps only for Firebase Swift pod dependencies.
           sed -i '' -E '/^use_modular_headers!$/d' ios/Podfile
-          for dep in GoogleUtilities RecaptchaInterop GTMSessionFetcher; do
+          for dep in GoogleUtilities RecaptchaInterop GTMSessionFetcher FirebaseAuthInterop FirebaseAppCheckInterop FirebaseCore FirebaseCoreExtension leveldb-library FirebaseFirestoreInternal FirebaseAppCheck; do
             if ! grep -q "pod '$dep', :modular_headers => true" ios/Podfile; then
               perl -0pi -e "s/(target 'Runner' do\n)/\1  pod '$dep', :modular_headers => true\n/" ios/Podfile
             fi
@@ -351,7 +351,7 @@ jobs:
           # Avoid global modular headers because it can break gRPC-C++ builds;
           # instead enable module maps only for Firebase Swift pod dependencies.
           sed -i '' -E '/^use_modular_headers!$/d' ios/Podfile
-          for dep in GoogleUtilities RecaptchaInterop GTMSessionFetcher; do
+          for dep in GoogleUtilities RecaptchaInterop GTMSessionFetcher FirebaseAuthInterop FirebaseAppCheckInterop FirebaseCore FirebaseCoreExtension leveldb-library FirebaseFirestoreInternal FirebaseAppCheck; do
             if ! grep -q "pod '$dep', :modular_headers => true" ios/Podfile; then
               perl -0pi -e "s/(target 'Runner' do\n)/\1  pod '$dep', :modular_headers => true\n/" ios/Podfile
             fi
