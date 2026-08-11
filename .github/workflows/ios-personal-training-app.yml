@@ -266,16 +266,12 @@ jobs:
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE="$CI_PROFILE_UUID" \
-            PROVISIONING_PROFILE_SPECIFIER="$CI_PROFILE_NAME" \
             archive
 
           xcodebuild -exportArchive \
             -archivePath ../build/ios/archive/Runner.xcarchive \
             -exportPath ../build/ios/ipa \
-            -exportOptionsPlist "$HOME/export_options.plist" \
-            PROVISIONING_PROFILE="$CI_PROFILE_UUID" \
-            PROVISIONING_PROFILE_SPECIFIER="$CI_PROFILE_NAME"
+            -exportOptionsPlist "$HOME/export_options.plist"
         working-directory: ${{ env.APP_DIR }}
 
       - name: Upload iOS IPA artifact
