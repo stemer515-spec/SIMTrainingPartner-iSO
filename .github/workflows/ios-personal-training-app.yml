@@ -89,7 +89,7 @@ jobs:
             <key>method</key>
             <string>app-store</string>
             <key>signingStyle</key>
-            <string>automatic</string>
+            <string>manual</string>
             <key>teamID</key>
             <string>$APPLE_TEAM_ID</string>
             <key>stripSwiftSymbols</key>
@@ -167,6 +167,12 @@ jobs:
             keychain add-certificates -A
           fi
 
+          xcode-project use-profiles \
+            --project "ios/Runner.xcodeproj" \
+            --archive-method app-store \
+            --export-options-plist "$HOME/export_options.plist" \
+            --code-signing-setup-verbose-logging
+
           echo "==== Code signing identities ===="
           security find-identity -v -p codesigning || true
           echo "==== Provisioning profiles ===="
@@ -204,9 +210,8 @@ jobs:
           pod install --repo-update
           sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]\+;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g" Pods/Pods.xcodeproj/project.pbxproj
 
-          # Ensure automatic signing is not blocked by stale manual profile fields.
-          sed -i '' -E '/PROVISIONING_PROFILE_SPECIFIER = /d;/PROVISIONING_PROFILE = /d' Runner.xcodeproj/project.pbxproj
-          sed -i '' -E 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' Runner.xcodeproj/project.pbxproj
+          # Ensure stale automatic signing flags do not block manual profile mapping.
+          sed -i '' -E 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' Runner.xcodeproj/project.pbxproj
           xcodebuild -workspace Runner.xcworkspace -scheme Runner -showBuildSettings | grep -E "CODE_SIGN_STYLE|PROVISIONING_PROFILE|PROVISIONING_PROFILE_SPECIFIER|DEVELOPMENT_TEAM|PRODUCT_BUNDLE_IDENTIFIER" || true
 
           xcodebuild -workspace Runner.xcworkspace \
@@ -215,9 +220,8 @@ jobs:
             -destination 'generic/platform=iOS' \
             -archivePath ../build/ios/archive/Runner.xcarchive \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            CODE_SIGN_STYLE=Automatic \
-            -allowProvisioningUpdates \
-            -allowProvisioningDeviceRegistration \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             archive
 
           xcodebuild -exportArchive \
