@@ -54,7 +54,15 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
 
       - name: Flutter pub get
-        run: flutter pub get
+        run: |
+          # Pin FlutterFire to a known-good patch set in CI.
+          flutter pub add \
+            firebase_core:4.11.0 \
+            firebase_auth:6.5.4 \
+            firebase_database:12.4.4 \
+            firebase_messaging:16.4.1 \
+            firebase_app_check:0.4.5 || true
+          flutter pub get
         working-directory: ${{ env.APP_DIR }}
 
       - name: Install CocoaPods dependencies
