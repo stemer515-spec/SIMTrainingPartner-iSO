@@ -196,6 +196,8 @@ jobs:
             if [ "$profile_team" = "$APPLE_TEAM_ID" ] && [ "$profile_bundle_id" = "$IOS_BUNDLE_ID" ]; then
               profile_uuid=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$selected_profile_plist")
               profile_name=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$selected_profile_plist")
+              CI_PROFILE_UUID="$profile_uuid"
+              CI_PROFILE_NAME="$profile_name"
               echo "CI_PROFILE_UUID=$profile_uuid" >> "$GITHUB_ENV"
               echo "CI_PROFILE_NAME=$profile_name" >> "$GITHUB_ENV"
               echo "Selected provisioning profile: $profile_name ($profile_uuid)"
