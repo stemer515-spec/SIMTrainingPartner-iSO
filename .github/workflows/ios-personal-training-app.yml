@@ -296,10 +296,12 @@ jobs:
             -scheme Runner \
             -configuration Release \
             -destination 'generic/platform=iOS' \
+            -jobs 1 \
             -archivePath ../build/ios/archive/Runner.xcarchive \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
+            COMPILER_INDEX_STORE_ENABLE=NO \
             archive 2>&1 | tee "$RUNNER_TEMP/xcodebuild-archive.log"; then
             echo "==== xcodebuild archive error lines ===="
             grep -niE "(^|[^A-Za-z])(fatal error:|error:|\*\* ARCHIVE FAILED \*\*|Command PhaseScriptExecution failed|Swift Compiler Error)" "$RUNNER_TEMP/xcodebuild-archive.log" || true
