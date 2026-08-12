@@ -519,6 +519,28 @@ jobs:
       - name: Upload IPA to TestFlight
         run: |
           set -euo pipefail
+
+          if [ -z "${APP_STORE_CONNECT_KEY_IDENTIFIER:-}" ] || [ -z "${APP_STORE_CONNECT_ISSUER_ID:-}" ]; then
+            echo "Missing App Store Connect key ID or issuer ID"
+            exit 1
+          fi
+
+          key_dir="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$key_dir"
+          key_path="$key_dir/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8"
+
+          if [ -n "${APP_STORE_CONNECT_PRIVATE_KEY:-}" ] && printf "%s" "$APP_STORE_CONNECT_PRIVATE_KEY" | grep -q "BEGIN PRIVATE KEY"; then
+            printf "%s" "$APP_STORE_CONNECT_PRIVATE_KEY" | sed 's/\\n/\n/g' > "$key_path"
+          elif [ -n "${APPLE_STORE_CONNECT_API_KEY_BASE64:-}" ] && printf "%s" "$APPLE_STORE_CONNECT_API_KEY_BASE64" | grep -q "BEGIN PRIVATE KEY"; then
+            printf "%s" "$APPLE_STORE_CONNECT_API_KEY_BASE64" | sed 's/\\n/\n/g' > "$key_path"
+          elif [ -n "${APPLE_STORE_CONNECT_API_KEY_BASE64:-}" ]; then
+            printf "%s" "$APPLE_STORE_CONNECT_API_KEY_BASE64" | tr -d ' \n\r\t' | base64 --decode > "$key_path"
+          else
+            echo "Missing key secret: set APP_STORE_CONNECT_PRIVATE_KEY or APPLE_STORE_CONNECT_API_KEY_BASE64"
+            exit 1
+          fi
+          chmod 600 "$key_path"
+
           ipa_path=$(find "$APP_DIR/build/ios/ipa" -maxdepth 1 -type f -name '*.ipa' | head -n 1)
           if [ -z "$ipa_path" ]; then
             echo "No IPA found to upload"
