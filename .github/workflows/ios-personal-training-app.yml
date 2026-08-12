@@ -515,3 +515,17 @@ jobs:
           name: ios-app-ipa-${{ inputs.app_env }}
           path: ${{ env.APP_DIR }}/build/ios/ipa/*.ipa
           if-no-files-found: error
+
+      - name: Upload IPA to TestFlight
+        run: |
+          set -euo pipefail
+          ipa_path=$(find "$APP_DIR/build/ios/ipa" -maxdepth 1 -type f -name '*.ipa' | head -n 1)
+          if [ -z "$ipa_path" ]; then
+            echo "No IPA found to upload"
+            exit 1
+          fi
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$ipa_path" \
+            --apiKey "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
