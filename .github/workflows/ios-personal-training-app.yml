@@ -161,13 +161,13 @@ jobs:
             GIT_SSL_NO_VERIFY=1 pod install --repo-update
           fi
 
-          # Xcode 15.4 cannot compile FirebaseSharedSwift signatures that use
-          # the newer `sending` return annotation. Normalize to plain Any.
+          # Xcode 15.4 cannot parse newer ownership modifiers used by recent
+          # Firebase Swift sources. Normalize signatures to Swift 5-compatible syntax.
           while IFS= read -r -d '' f; do
-            perl -0pi -e "s/->\s*sending\s+Any/-> Any/g" "$f"
-            echo "---- FirebaseDataEncoder signature snippet ----"
-            grep -nE "open func encode<|sending Any|-> Any" "$f" || true
-          done < <(find "$PWD" "$HOME/.pub-cache" -type f -name 'FirebaseDataEncoder.swift' -print0 2>/dev/null)
+            perl -0pi -e "s/\bconsuming\s+sending\s+//g; s/\binout\s+sending\s+/inout /g; s/->\s*sending\s+/-> /g; s/\bborrowing\s+func\b/func/g; s/([(:]\s*)sending\s+/\1/g" "$f"
+          done < <(find "$PWD/Pods" "$HOME/.pub-cache" -type f -name '*.swift' \( -path '*/Firebase*/*' -o -path '*/GoogleUtilities/*' -o -path '*/GTMSessionFetcher/*' -o -path '*/RecaptchaInterop/*' \) -print0 2>/dev/null)
+          echo "---- Firebase Swift ownership keyword scan ----"
+          grep -RInE "\b(sending|consuming|borrowing)\b" "$PWD/Pods/FirebaseCoreInternal" "$PWD/Pods/FirebaseSharedSwift" 2>/dev/null | head -n 80 || true
         working-directory: ${{ env.APP_DIR }}
 
       - name: Prepare export options
@@ -378,13 +378,13 @@ jobs:
             GIT_SSL_NO_VERIFY=1 pod install --repo-update
           fi
 
-          # Xcode 15.4 cannot compile FirebaseSharedSwift signatures that use
-          # the newer `sending` return annotation. Normalize to plain Any.
+          # Xcode 15.4 cannot parse newer ownership modifiers used by recent
+          # Firebase Swift sources. Normalize signatures to Swift 5-compatible syntax.
           while IFS= read -r -d '' f; do
-            perl -0pi -e "s/->\s*sending\s+Any/-> Any/g" "$f"
-            echo "---- FirebaseDataEncoder signature snippet ----"
-            grep -nE "open func encode<|sending Any|-> Any" "$f" || true
-          done < <(find "$PWD" "$HOME/.pub-cache" -type f -name 'FirebaseDataEncoder.swift' -print0 2>/dev/null)
+            perl -0pi -e "s/\bconsuming\s+sending\s+//g; s/\binout\s+sending\s+/inout /g; s/->\s*sending\s+/-> /g; s/\bborrowing\s+func\b/func/g; s/([(:]\s*)sending\s+/\1/g" "$f"
+          done < <(find "$PWD/Pods" "$HOME/.pub-cache" -type f -name '*.swift' \( -path '*/Firebase*/*' -o -path '*/GoogleUtilities/*' -o -path '*/GTMSessionFetcher/*' -o -path '*/RecaptchaInterop/*' \) -print0 2>/dev/null)
+          echo "---- Firebase Swift ownership keyword scan ----"
+          grep -RInE "\b(sending|consuming|borrowing)\b" "$PWD/Pods/FirebaseCoreInternal" "$PWD/Pods/FirebaseSharedSwift" 2>/dev/null | head -n 80 || true
 
           sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]\+;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g" Pods/Pods.xcodeproj/project.pbxproj
 
@@ -433,8 +433,8 @@ jobs:
             archive 2>&1 | tee "$RUNNER_TEMP/xcodebuild-archive.log"; then
             echo "==== xcodebuild archive error lines ===="
             grep -niE "(^|[^A-Za-z])(fatal error:|error:|\*\* ARCHIVE FAILED \*\*|Command PhaseScriptExecution failed|Swift Compiler Error)" "$RUNNER_TEMP/xcodebuild-archive.log" || true
-            echo "==== FirebaseSharedSwift focused errors ===="
-            grep -niE "FirebaseSharedSwift|SwiftCompile|CompileSwift|error:" "$RUNNER_TEMP/xcodebuild-archive.log" | tail -n 200 || true
+            echo "==== Firebase Swift focused errors ===="
+            grep -niE "FirebaseSharedSwift|FirebaseCoreInternal|SwiftCompile|CompileSwift|sending|consuming|borrowing|error:" "$RUNNER_TEMP/xcodebuild-archive.log" | tail -n 300 || true
             echo "==== xcodebuild archive tail ===="
             tail -n 500 "$RUNNER_TEMP/xcodebuild-archive.log" || true
             exit 1
