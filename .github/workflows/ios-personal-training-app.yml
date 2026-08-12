@@ -441,6 +441,22 @@ jobs:
             grep -nE "health-Swift\.h|__has_include" "$f" || true
           done < <(find "$HOME/.pub-cache" "$PWD/.symlinks" -type f -name 'HealthPlugin.m' -print0 2>/dev/null)
 
+          # cloud_firestore uses a direct execution_time selector that is not
+          # declared in the current FirebaseFirestore Objective-C headers.
+          while IFS= read -r -d '' f; do
+            perl -0pi -e 's/\[snapshot execution_time\]/[snapshot valueForKey:@"execution_time"]/g' "$f"
+            echo "---- cloud_firestore execution_time snippet ----"
+            grep -nE 'execution_time|valueForKey:@"execution_time"' "$f" || true
+          done < <(find "$HOME/.pub-cache" "$PWD/.symlinks" -type f -name 'FLTFirebaseFirestorePlugin.m' -print0 2>/dev/null)
+
+          # cloud_firestore uses a direct execution_time selector that is not
+          # declared in the current FirebaseFirestore Objective-C headers.
+          while IFS= read -r -d '' f; do
+            perl -0pi -e 's/\[snapshot execution_time\]/[snapshot valueForKey:@"execution_time"]/g' "$f"
+            echo "---- cloud_firestore execution_time snippet ----"
+            grep -nE 'execution_time|valueForKey:@"execution_time"' "$f" || true
+          done < <(find "$HOME/.pub-cache" "$PWD/.symlinks" -type f -name 'FLTFirebaseFirestorePlugin.m' -print0 2>/dev/null)
+
           # Ensure stale automatic signing flags do not block manual profile mapping.
           sed -i '' -E 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' Runner.xcodeproj/project.pbxproj
           /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" "$HOME/export_options.plist" 2>/dev/null || true
