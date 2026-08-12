@@ -76,9 +76,10 @@ jobs:
             firebase_auth:6.5.4 \
             firebase_database:12.4.4 \
             firebase_messaging:16.4.1 \
-            firebase_app_check:0.4.5 || true
+            firebase_app_check:0.4.5+2 || true
           flutter pub get
           flutter pub deps | grep -E "device_info_plus( |$)" || true
+          flutter pub deps | grep -E "firebase_app_check( |$)" || true
         working-directory: ${{ env.APP_DIR }}
 
       - name: Hotfix device_info_plus for Xcode 15.4
