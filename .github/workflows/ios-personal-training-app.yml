@@ -179,8 +179,9 @@ jobs:
           # across Xcode toolchains. Normalize generated Swift for CI stability.
           while IFS= read -r -d '' f; do
             perl -0pi -e "s/:\s*\@retroactive\s+Error/: Error/g; s/\bconsuming\s+sending\s+//g; s/\binout\s+sending\s+/inout /g; s/->\s*sending\s+/-> /g; s/\bborrowing\s+func\b/func/g; s/([(:]\s*)sending\s+/\1/g" "$f"
+            perl -0pi -e "s/delegateProvider\s*=\s*RecaptchaProvider\(app:\s*app,\s*siteKey:\s*recaptchaSiteKey\)/delegateProvider = DeviceCheckProvider(app: app)/g; s/delegateProvider\s*=\s*RecaptchaProvider\(app:\s*app\)/delegateProvider = DeviceCheckProvider(app: app)/g" "$f"
             echo "---- firebase_app_check patch snippet: $f ----"
-            grep -nE "@retroactive|sending|consuming|borrowing|extension FlutterError" "$f" || true
+            grep -nE "@retroactive|sending|consuming|borrowing|extension FlutterError|RecaptchaProvider|DeviceCheckProvider" "$f" || true
           done < <(find "$HOME/.pub-cache" "$PWD/.symlinks" -type f -path '*/firebase_app_check*/Sources/firebase_app_check/*.swift' -print0 2>/dev/null)
         working-directory: ${{ env.APP_DIR }}
 
@@ -404,8 +405,9 @@ jobs:
           # across Xcode toolchains. Normalize generated Swift for CI stability.
           while IFS= read -r -d '' f; do
             perl -0pi -e "s/:\s*\@retroactive\s+Error/: Error/g; s/\bconsuming\s+sending\s+//g; s/\binout\s+sending\s+/inout /g; s/->\s*sending\s+/-> /g; s/\bborrowing\s+func\b/func/g; s/([(:]\s*)sending\s+/\1/g" "$f"
+            perl -0pi -e "s/delegateProvider\s*=\s*RecaptchaProvider\(app:\s*app,\s*siteKey:\s*recaptchaSiteKey\)/delegateProvider = DeviceCheckProvider(app: app)/g; s/delegateProvider\s*=\s*RecaptchaProvider\(app:\s*app\)/delegateProvider = DeviceCheckProvider(app: app)/g" "$f"
             echo "---- firebase_app_check patch snippet: $f ----"
-            grep -nE "@retroactive|sending|consuming|borrowing|extension FlutterError" "$f" || true
+            grep -nE "@retroactive|sending|consuming|borrowing|extension FlutterError|RecaptchaProvider|DeviceCheckProvider" "$f" || true
           done < <(find "$HOME/.pub-cache" "$PWD/.symlinks" -type f -path '*/firebase_app_check*/Sources/firebase_app_check/*.swift' -print0 2>/dev/null)
 
           sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]\+;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g" Pods/Pods.xcodeproj/project.pbxproj
