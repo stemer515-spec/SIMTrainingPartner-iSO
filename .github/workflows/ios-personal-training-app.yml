@@ -16,6 +16,13 @@ jobs:
   build-ios:
     runs-on: macos-latest
     env:
+      # Required secrets:
+      # - APP_STORE_CONNECT_ISSUER_ID
+      # - APPLE_STORE_CONNECT_API_KEY_ID
+      # - APP_STORE_CONNECT_PRIVATE_KEY or APPLE_STORE_CONNECT_API_KEY_BASE64
+      # - APP_STORE_CONNECT_CERTIFICATE_KEY
+      # Optional direct-signing secrets (preferred when set):
+      # - IOS_DIST_P12_BASE64, IOS_DIST_P12_PASSWORD, IOS_MOBILEPROVISION_BASE64
       APP_DIR: examples/personal_training_app
       IOS_BUNDLE_ID: com.simtrainingpartner.simtrainingpartner
       APPLE_TEAM_ID: 5QHDS9AQFB
@@ -83,24 +90,6 @@ jobs:
           flutter pub deps | grep -E "device_info_plus( |$)" || true
           flutter pub deps | grep -E "firebase_app_check( |$)" || true
           flutter pub deps | grep -E "cloud_firestore( |$)" || true
-        working-directory: ${{ env.APP_DIR }}
-
-      - name: Hotfix device_info_plus for Xcode 15.4
-        run: |
-          set -euo pipefail
-          # device_info_plus 12.4.0 references isiOSAppOnVision, which is not
-          # available in the Xcode 15.4 iOS SDK used by this workflow.
-          while IFS= read -r -d '' f; do
-            perl -0pi -e "s/isiOSAppOnVision\s*=\s*\[NSNumber numberWithBool:\[info isiOSAppOnVision\]\];/isiOSAppOnVision = @NO;/g" "$f"
-            perl -0pi -e "s/\[info\s+isiOSAppOnVision\]/NO/g" "$f"
-            perl -0pi -e "s/info\.isiOSAppOnVision/NO/g" "$f"
-            perl -0pi -e "s/^\h*isiOSAppOnVision\h*=\h*.*?;\h*$/    isiOSAppOnVision = @NO;/mg" "$f"
-            perl -0pi -e "s/isiOSAppOnVision\s*=\s*;/isiOSAppOnVision = @NO;/g" "$f"
-            perl -0pi -e "s/natural_t\s+mem_free\s*=\s*vm_stat\.free_count\s*\*\s*page_size;/uint64_t mem_free = (uint64_t)vm_stat.free_count * (uint64_t)page_size;/g" "$f"
-            echo "---- device_info_plus patched snippet ----"
-            grep -nE "isiOSAppOnVision|mem_free|vm_stat\.free_count" "$f" || true
-            echo "Patched: $f"
-          done < <(find "$HOME/.pub-cache" "$PWD/ios/.symlinks" -type f -name 'FPPDeviceInfoPlusPlugin.m' -print0 2>/dev/null)
         working-directory: ${{ env.APP_DIR }}
 
       - name: Install CocoaPods dependencies
@@ -456,14 +445,6 @@ jobs:
             grep -nE 'execution_time|valueForKey:@"execution_time"' "$f" || true
           done < <(find "$HOME/.pub-cache" "$PWD/.symlinks" -type f -name 'FLTFirebaseFirestorePlugin.m' -print0 2>/dev/null)
 
-          # cloud_firestore uses a direct execution_time selector that is not
-          # declared in the current FirebaseFirestore Objective-C headers.
-          while IFS= read -r -d '' f; do
-            perl -0pi -e 's/\[snapshot execution_time\]/[snapshot valueForKey:@"execution_time"]/g' "$f"
-            echo "---- cloud_firestore execution_time snippet ----"
-            grep -nE 'execution_time|valueForKey:@"execution_time"' "$f" || true
-          done < <(find "$HOME/.pub-cache" "$PWD/.symlinks" -type f -name 'FLTFirebaseFirestorePlugin.m' -print0 2>/dev/null)
-
           # Ensure stale automatic signing flags do not block manual profile mapping.
           sed -i '' -E 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' Runner.xcodeproj/project.pbxproj
           /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" "$HOME/export_options.plist" 2>/dev/null || true
@@ -557,3 +538,8 @@ jobs:
             --file "$ipa_path" \
             --apiKey "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+
+      - name: Post upload status
+        run: |
+          echo "TestFlight upload completed successfully for $IOS_BUNDLE_ID"
+          echo "Build number: ${{ github.run_number }}.${{ github.run_attempt }}"
