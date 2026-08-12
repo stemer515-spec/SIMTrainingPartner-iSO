@@ -501,7 +501,7 @@ jobs:
 
       - name: Upload xcodebuild logs
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: xcodebuild-logs-${{ inputs.app_env }}
           path: |
@@ -510,7 +510,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload iOS IPA artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: ios-app-ipa-${{ inputs.app_env }}
           path: ${{ env.APP_DIR }}/build/ios/ipa/*.ipa
