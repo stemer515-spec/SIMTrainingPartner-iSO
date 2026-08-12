@@ -45,9 +45,9 @@ jobs:
 
       - name: Install Codemagic CLI tools
         run: |
-          brew update
-          brew install pipx
-          pipx install codemagic-cli-tools
+          python3 -m pip install --user --upgrade pip pipx
+          python3 -m pipx ensurepath
+          python3 -m pipx install codemagic-cli-tools
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Disable Swift Package Manager in CI
@@ -500,7 +500,7 @@ jobs:
 
       - name: Upload xcodebuild logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: xcodebuild-logs-${{ inputs.app_env }}
           path: |
@@ -509,7 +509,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload iOS IPA artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ios-app-ipa-${{ inputs.app_env }}
           path: ${{ env.APP_DIR }}/build/ios/ipa/*.ipa
