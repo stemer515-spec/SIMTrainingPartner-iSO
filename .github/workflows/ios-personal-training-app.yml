@@ -435,7 +435,7 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            archive 2>&1 | tee "$RUNNER_TEMP/xcodebuild-archive.log"; then
+            archive > "$RUNNER_TEMP/xcodebuild-archive.log" 2>&1; then
             echo "==== xcodebuild archive error lines ===="
             grep -niE "(^|[^A-Za-z])(fatal error:|error:|\*\* ARCHIVE FAILED \*\*|Command PhaseScriptExecution failed|Swift Compiler Error)" "$RUNNER_TEMP/xcodebuild-archive.log" || true
             echo "==== Firebase Swift focused errors ===="
@@ -444,17 +444,19 @@ jobs:
             tail -n 500 "$RUNNER_TEMP/xcodebuild-archive.log" || true
             exit 1
           fi
+          echo "xcodebuild archive succeeded"
 
           if ! xcodebuild -exportArchive \
             -archivePath ../build/ios/archive/Runner.xcarchive \
             -exportPath ../build/ios/ipa \
-            -exportOptionsPlist "$HOME/export_options.plist" 2>&1 | tee "$RUNNER_TEMP/xcodebuild-export.log"; then
+            -exportOptionsPlist "$HOME/export_options.plist" > "$RUNNER_TEMP/xcodebuild-export.log" 2>&1; then
             echo "==== xcodebuild export error lines ===="
             grep -niE "(^|[^A-Za-z])(fatal error:|error:|\*\* EXPORT FAILED \*\*|Command PhaseScriptExecution failed|Swift Compiler Error)" "$RUNNER_TEMP/xcodebuild-export.log" || true
             echo "==== xcodebuild export tail ===="
             tail -n 500 "$RUNNER_TEMP/xcodebuild-export.log" || true
             exit 1
           fi
+          echo "xcodebuild export succeeded"
         working-directory: ${{ env.APP_DIR }}
 
       - name: Upload xcodebuild logs
