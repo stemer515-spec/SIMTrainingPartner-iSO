@@ -14,7 +14,7 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-14
+    runs-on: macos-latest
     env:
       APP_DIR: examples/personal_training_app
       IOS_BUNDLE_ID: com.simtrainingpartner.simtrainingpartner
@@ -35,7 +35,7 @@ jobs:
       - name: Set up Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: latest
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -129,6 +129,9 @@ jobs:
               cat ios/Flutter/Profile.xcconfig.bak
             } > ios/Flutter/Profile.xcconfig
           fi
+
+          # Ensure app target minimum iOS version is 15.0 for App Store policy.
+          sed -i '' -E 's/IPHONEOS_DEPLOYMENT_TARGET = 1[0-4](\.[0-9]+)?;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' ios/Runner.xcodeproj/project.pbxproj
 
           if grep -qE "^platform :ios" ios/Podfile; then
             sed -i '' -E "s/^platform :ios, .*/platform :ios, '15.0'/" ios/Podfile
