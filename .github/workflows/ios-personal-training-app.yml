@@ -329,6 +329,8 @@ jobs:
       - name: Build iOS IPA for App Store
         run: |
           set -euo pipefail
+          IOS_BUILD_NUMBER=$(( ${{ github.run_number }} * 100 + ${{ github.run_attempt }} ))
+          echo "Using iOS build number: $IOS_BUILD_NUMBER"
           mkdir -p build/ios/SourcePackages
           : > "$RUNNER_TEMP/xcodebuild-archive.log"
           : > "$RUNNER_TEMP/xcodebuild-export.log"
@@ -339,6 +341,7 @@ jobs:
             --release \
             --config-only \
             --no-codesign \
+            --build-number="$IOS_BUILD_NUMBER" \
             --dart-define=APP_ENV=${{ inputs.app_env }}
 
           if [ -f ios/Flutter/Release.xcconfig ] && ! grep -q 'Pods-Runner.release.xcconfig' ios/Flutter/Release.xcconfig; then
