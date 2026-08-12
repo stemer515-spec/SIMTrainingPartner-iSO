@@ -45,10 +45,11 @@ jobs:
 
       - name: Install Codemagic CLI tools
         run: |
-          python3 -m pip install --user --upgrade pip pipx
-          python3 -m pipx ensurepath
-          python3 -m pipx install codemagic-cli-tools
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          python3 -m venv "$RUNNER_TEMP/codemagic-venv"
+          source "$RUNNER_TEMP/codemagic-venv/bin/activate"
+          python -m pip install --upgrade pip
+          python -m pip install codemagic-cli-tools
+          echo "$RUNNER_TEMP/codemagic-venv/bin" >> "$GITHUB_PATH"
 
       - name: Disable Swift Package Manager in CI
         run: flutter config --no-enable-swift-package-manager
